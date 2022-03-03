@@ -80,7 +80,7 @@ const View = ({ collectionName, collectionColor }) => {
 
   return (
     <div>
-      <div>{profit.toFixed(2)} | {profitPercentage.toFixed(2)}%</div>
+      <div>${profit.toFixed(2)} | {profitPercentage.toFixed(2)}%</div>
       <Line options={options} data={data} />
     </div>
   );
