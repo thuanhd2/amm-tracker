@@ -18,6 +18,10 @@ import { db } from '../db'
 
 import { Line } from 'react-chartjs-2';
 
+function formatCurrency(num) {
+  return num.toLocaleString("en-US");
+}
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -34,6 +38,7 @@ const View = ({ collectionName, collectionColor, days }) => {
   const [labels, setLabels] = React.useState([]);
   const [profit, setProfit] = React.useState(0);
   const [profitPercentage, setProfitPercentage] = React.useState(0);
+  const [total, setTotal] = React.useState(0);
 
   useEffect(() => {
     let daysNumber = 7;
@@ -64,9 +69,9 @@ const View = ({ collectionName, collectionColor, days }) => {
       setLabels(labels);
       setProfit(profit);
       setProfitPercentage(profitPercentage);
+      setTotal(lastPoint.totalValue);
     })
   }, [collectionName, days])
-  console.log(dataSetVndr);
   const data = {
     labels,
     datasets: [
@@ -117,7 +122,7 @@ const View = ({ collectionName, collectionColor, days }) => {
 
   return (
     <div>
-      <div>${profit.toFixed(2)} | {profitPercentage.toFixed(2)}%</div>
+      <div>${formatCurrency(total)} | ${profit.toFixed(2)} | {profitPercentage.toFixed(2)}%</div>
       <Line options={options} data={data} />
     </div>
   );
