@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { collection, query, orderBy, onSnapshot, where, Timestamp } from "firebase/firestore"
+import { collection, query, orderBy, onSnapshot, where, Timestamp, doc, deleteDoc } from "firebase/firestore"
 import moment from "moment";
 
 import { db } from '../db'
@@ -36,18 +36,19 @@ const View = ({ collectionName, collectionColor, days }) => {
   const [dataSet, setDataSet] = React.useState([]);
   const [dataSetVndr, setDataSetVndr] = React.useState([]);
   const [labels, setLabels] = React.useState([]);
+  const [docIds, setDocIds] = React.useState([]);
   const [profit, setProfit] = React.useState(0);
   const [profitPercentage, setProfitPercentage] = React.useState(0);
   const [total, setTotal] = React.useState(0);
 
   useEffect(() => {
-    let daysNumber = 7;
+    let daysNumber = 1;
     try {
       daysNumber = parseFloat(days);
     } catch (e) {
     }
     if (isNaN(daysNumber)) {
-      daysNumber = 7;
+      daysNumber = 1;
     }
     const now = new Date();
     const timestamp = Timestamp.fromDate(now);
@@ -56,6 +57,7 @@ const View = ({ collectionName, collectionColor, days }) => {
     const q = query(collection(db, collectionName), orderBy('created', 'asc'), where('created', '>', timestamp))
     onSnapshot(q, (querySnapshot) => {
       const points = querySnapshot.docs.map(doc => doc.data()).filter(r => r.created && r.totalValue);
+      const ids = querySnapshot.docs.map(doc => doc.id);
       const labels = points.map(point => moment(new Date(point.created.seconds * 1000)).format("DD/MM HH:mm"));
       const valuePoints = points.map(point => point.totalValue)
       const valuePointsVndr = points.map(point => point.totalValue * point.poolPrice);
@@ -70,6 +72,7 @@ const View = ({ collectionName, collectionColor, days }) => {
       setProfit(profit);
       setProfitPercentage(profitPercentage);
       setTotal(lastPoint.totalValue);
+      setDocIds(ids);
     })
   }, [collectionName, days])
   const data = {
@@ -117,6 +120,14 @@ const View = ({ collectionName, collectionColor, days }) => {
           drawOnChartArea: false,
         },
       },
+    },
+    onClick: function (evt, element) {
+      if (element.length > 0) {
+        var ind = element[0].index;
+        if (window.confirm('Do you want to remove this point?')) {
+          deleteDoc(doc(db, collectionName, docIds[ind]));
+        }
+      }
     },
   };
 

@@ -3,7 +3,7 @@ import './App.css';
 import TrackingChart from "./charts"
 
 function App() {
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(1);
   return (
     <div className="App">
       <input onChange={v => setDays(v.target.value)} value={days} />
