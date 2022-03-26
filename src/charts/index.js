@@ -40,6 +40,7 @@ const View = ({ collectionName, collectionColor, days }) => {
   const [profit, setProfit] = React.useState(0);
   const [profitPercentage, setProfitPercentage] = React.useState(0);
   const [total, setTotal] = React.useState(0);
+  const [rawPoints, setRawPoints] = React.useState([]);
 
   useEffect(() => {
     let daysNumber = 1;
@@ -56,7 +57,7 @@ const View = ({ collectionName, collectionColor, days }) => {
     console.log(timestamp);
     const q = query(collection(db, collectionName), orderBy('created', 'asc'), where('created', '>', timestamp))
     onSnapshot(q, (querySnapshot) => {
-      const points = querySnapshot.docs.map(doc => doc.data()).filter(r => r.created && r.totalValue);
+      const points = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(r => r.created && r.totalValue);
       const ids = querySnapshot.docs.map(doc => doc.id);
       const labels = points.map(point => moment(new Date(point.created.seconds * 1000)).format("DD/MM HH:mm"));
       const valuePoints = points.map(point => point.totalValue)
@@ -73,6 +74,7 @@ const View = ({ collectionName, collectionColor, days }) => {
       setProfitPercentage(profitPercentage);
       setTotal(lastPoint.totalValue);
       setDocIds(ids);
+      setRawPoints(points);
     })
   }, [collectionName, days])
   const data = {
@@ -124,7 +126,9 @@ const View = ({ collectionName, collectionColor, days }) => {
     onClick: function (evt, element) {
       if (element.length > 0) {
         var ind = element[0].index;
-        if (window.confirm('Do you want to remove this point?')) {
+        const docId = docIds[ind];
+        const point = rawPoints.find(r => r.id === docId) || {};
+        if (window.confirm('Do you want to remove this point? Point data\n' + JSON.stringify(point, null, 2))) {
           deleteDoc(doc(db, collectionName, docIds[ind]));
         }
       }
