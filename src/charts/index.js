@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { collection, query, orderBy, onSnapshot, where, Timestamp, doc, deleteDoc } from "firebase/firestore"
+import { collection, query, orderBy, where, Timestamp, doc, deleteDoc, getDocs } from "firebase/firestore"
 import moment from "moment";
 
 import { db } from '../db'
@@ -31,6 +31,13 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+
+function footerTooltipHandler(rawPoints) {
+  return (tooltipItems) => {
+    const point = rawPoints[tooltipItems[0].dataIndex];
+    return JSON.stringify({ ...point, created: undefined }, null, 2);
+  }
+}
 
 const View = ({ collectionName, collectionColor, days }) => {
   const [dataSet, setDataSet] = React.useState([]);
@@ -56,7 +63,7 @@ const View = ({ collectionName, collectionColor, days }) => {
     timestamp.seconds -= daysNumber * 24 * 60 * 60;
     console.log(timestamp);
     const q = query(collection(db, collectionName), orderBy('created', 'asc'), where('created', '>', timestamp))
-    onSnapshot(q, (querySnapshot) => {
+    getDocs(q).then(querySnapshot => {
       const points = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(r => r.created && r.totalValue);
       const ids = querySnapshot.docs.map(doc => doc.id);
       const labels = points.map(point => moment(new Date(point.created.seconds * 1000)).format("DD/MM HH:mm"));
@@ -75,7 +82,7 @@ const View = ({ collectionName, collectionColor, days }) => {
       setTotal(lastPoint.totalValue);
       setDocIds(ids);
       setRawPoints(points);
-    })
+    });
   }, [collectionName, days])
   const data = {
     labels,
@@ -107,6 +114,11 @@ const View = ({ collectionName, collectionColor, days }) => {
         display: true,
         text: collectionName,
       },
+      tooltip: {
+        callbacks: {
+          footer: footerTooltipHandler(rawPoints),
+        }
+      }
     },
     scales: {
       y: {
@@ -126,9 +138,7 @@ const View = ({ collectionName, collectionColor, days }) => {
     onClick: function (evt, element) {
       if (element.length > 0) {
         var ind = element[0].index;
-        const docId = docIds[ind];
-        const point = rawPoints.find(r => r.id === docId) || {};
-        if (window.confirm('Do you want to remove this point? Point data\n' + JSON.stringify(point, null, 2))) {
+        if (window.confirm('Do you want to remove this point?')) {
           deleteDoc(doc(db, collectionName, docIds[ind]));
         }
       }
