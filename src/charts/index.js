@@ -65,7 +65,7 @@ const View = ({ collectionName, collectionColor, days }) => {
     const q = query(collection(db, collectionName), orderBy('created', 'asc'), where('created', '>', timestamp))
     getDocs(q).then(querySnapshot => {
       const points = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(r => r.created && r.totalValue);
-      const ids = querySnapshot.docs.map(doc => doc.id);
+      const ids = points.map(doc => doc.id);
       const labels = points.map(point => moment(new Date(point.created.seconds * 1000)).format("DD/MM HH:mm"));
       const valuePoints = points.map(point => point.totalValue)
       const valuePointsVndr = points.map(point => point.totalValue * point.poolPrice);
