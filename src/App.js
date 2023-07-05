@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import queryString from "query-string";
 import './App.css';
-import TrackingChart from "./charts"
+import TrackingChart from "./charts/chart-v2"
 
 function App() {
   const [days, setDays] = useState(1);
